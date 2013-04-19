@@ -101,8 +101,10 @@ if ( supportProperty && supportProperty != propertyName ) {
 				)
 			}
 		}
+	}
+	
 	// If 3d Transforms are not supported, replace them with 2d counterparts
-	} else if ( ! support3dTransform) {
+	if ( ! support3dTransform) {
 		propertyHook = {
 			set: function( elem, value ) {
 				if(value.indexOf('3d') > 0) {
