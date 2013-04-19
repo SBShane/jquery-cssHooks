@@ -26,24 +26,31 @@ var div = document.createElement('div'),
 	propertyName = 'transform',
 	suffix = 'Transform',
 	testProperties = [
-		'O' + suffix,
-		'ms' + suffix,
-		'Webkit' + suffix,
-		'Moz' + suffix,
+		['O' + suffix, '-o-' + propertyName],
+		['ms' + suffix, '-ms-' + propertyName],
+		['Webkit' + suffix, '-webkit-' + propertyName],
+		['Moz' + suffix, '-moz-' + propertyName],
 		// prefix-less property
-		propertyName
+		[propertyName, propertyName]
 	],
 	i = testProperties.length,
 	supportProperty,
 	supportMatrixFilter,
+	support3dTransform = false,
 	propertyHook,
 	propertyGet,
 	rMatrix = /Matrix([^)]*)/;
 
 // test different vendor prefixes of this property
 while ( i-- ) {
-	if ( testProperties[i] in divStyle ) {
-		$.support[propertyName] = supportProperty = testProperties[i];
+	if ( testProperties[i][0] in divStyle ) {
+		$.support[propertyName] = supportProperty = testProperties[i][0];
+		// test for 3d Transforms support - http://tiffanybbrown.com/2012/09/04/testing-for-css-3d-transforms-support/
+		if( ! support3dTransform) {
+			divStyle[testProperties[i][0]] = 'matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)';
+			support3dTransform = window.getComputedStyle(div).getPropertyValue(testProperties[i][1]);
+			support3dTransform = support3dTransform !== undefined && support3dTransform !== 'none';
+		}
 		continue;
 	}
 }
@@ -92,6 +99,35 @@ if ( supportProperty && supportProperty != propertyName ) {
 					$.css( elem, supportProperty.replace(/^ms/, 'Ms') ):
 					elem.style[supportProperty]
 				)
+			}
+		}
+	// If 3d Transforms are not supported, replace them with 2d counterparts
+	} else if ( ! support3dTransform) {
+		propertyHook = {
+			set: function( elem, value ) {
+				if(value.indexOf('3d') > 0) {
+					// This method gets the params including format (px, em, pt, etc)
+					var matches = value.match(/\((.+?)\)/);
+					var params = matches[1].replace(/ /g, '').split(',');
+					var type = value.split('(');
+					value = type[0].replace('3d', '');
+					switch(type[0]) {
+						// Convert matrix3d(n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n) to matrix(n,n,n,n,n,n)
+						case 'matrix3d':
+							// TODO: run calculation to convert matrix3d to matrix
+							break;
+						// Convert rotate3d(x,y,z,deg) to rotate(deg)
+						case 'rotate3d':
+							value = value + '(' + params[3] + ')';
+							break;
+						// Convert scale3d(x,y,z) to scale(x,y) and translate3d(x,y,z) to translate(x,y)
+						case 'scale3d':
+						case 'translate3d':
+							value = value + '(' + params[0] + ', ' + params[1] + ')';
+							break;
+					}
+				}
+				elem.style[supportProperty] = value;
 			}
 		}
 	}
