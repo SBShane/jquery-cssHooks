@@ -30,10 +30,18 @@
 		cssLinear = "background-image: -moz-linear-gradient(red, blue);background-image: -webkit-linear-gradient(red, blue);background-image: -o-linear-gradient(red, blue);background-image: linear-gradient(red, blue);",
 		cssRadial = "background-image: -moz-radial-gradient(circle, orange, red);background-image: -webkit-radial-gradient(circle, orange, red);background-image: -o-radial-gradient(circle,red, blue);background-image: radial-gradient(circle, orange, red);",
 		cssPropsArray = cssProps.split( rWhitespace );
+		linearDirections = ["to bottom", "to top", "to right", "to left"];
+		browserLinearDirections = ["top", "bottom", "left", "right"];
 		divStyle.cssText = cssLinear,
 		linearSettings = function ( value ) {
 			var parts = rLinearSettings.exec( value );
 			value = value.replace( new RegExp(parts[2], 'g') , $.support.linearGradient );
+			// Default linear directions are different than browser extension directions so replace if necessary
+			for(var i = 0; i < linearDirections.length; i++) {
+				if(value.indexOf(linearDirections[i]) > -1) {
+					value = value.replace(linearDirections[i], browserLinearDirections[i]);
+				}
+			}
 			return value;
 		},
 		radialSettings = function ( value ) {
@@ -65,7 +73,6 @@
 				$.cssHooks[ prop ] = {
 
 					set: function( elem, value ) {
-												
 						if( rLinear.test( value ) ){
 							elem.style[ prop ] = linearSettings( value );
 						} else if ( rRadial.test( value ) ) {

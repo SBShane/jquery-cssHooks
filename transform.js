@@ -47,9 +47,13 @@ while ( i-- ) {
 		$.support[propertyName] = supportProperty = testProperties[i][0];
 		// test for 3d Transforms support - http://tiffanybbrown.com/2012/09/04/testing-for-css-3d-transforms-support/
 		if( ! support3dTransform) {
+			// have to insert div to test
+			document.body.appendChild(div);
 			divStyle[testProperties[i][0]] = 'matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1)';
 			support3dTransform = window.getComputedStyle(div).getPropertyValue(testProperties[i][1]);
 			support3dTransform = support3dTransform !== undefined && support3dTransform !== 'none';
+			// remove test div
+			document.body.removeChild(div);
 		}
 		continue;
 	}
